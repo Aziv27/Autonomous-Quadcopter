@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<robot name="quadcopter" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 1. ROOT LINK -->
+  <link name="base_link">
+    <inertial>
+      <mass value="0.001"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0" 
+               iyy="0.000001" iyz="0" 
+               izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <!-- 2. BASE TO CHASSIS JOINT -->
+  <joint name="base_to_chassis" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 3. CHASSIS LINK -->
+  <link name="chassis">
+    <visual>
+      <origin xyz="-0.0211 -0.0795 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="file:///home/ubuntu/drone_ws/src/cpp_pubsub/meshes/chassis.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark_grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+    
+    <collision>
+      <origin xyz="-0.0211 -0.0795 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="file:///home/ubuntu/drone_ws/src/cpp_pubsub/meshes/chassis.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+    
+    <inertial>
+      <mass value="1.25666"/>
+      <origin xyz="0.0 0.0 -0.050" rpy="0 0 0"/>
+      <inertia ixx="0.020238946" ixy="-0.000042264" ixz="0.000005567"
+               iyy="0.013726957" iyz="-0.000238167"
+               izz="0.030648414"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="chassis">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <!-- 4. CHASSIS TO SONAR JOINT -->
+  <joint name="chassis_to_sonar" type="fixed">
+    <parent link="chassis"/>
+    <child link="sonar_link"/>
+    <origin xyz="0 0 -0.06" rpy="0 1.5708 0"/>
+  </joint>
+
+  <!-- 5. SONAR SENSOR LINK -->
+  <link name="sonar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.02" length="0.05"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.0 0.0 1.0 1.0"/>
+      </material>
+    </visual>
+
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0000308" ixy="0.0" ixz="0.0"
+               iyy="0.0000308" iyz="0.0"
+               izz="0.0000200"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="sonar_link">
+    <material>Gazebo/Blue</material>
+    <sensor type="ray" name="altitude_sonar">
+      <pose>0 0 0 0 0 0</pose>
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>50.0</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>1</samples>
+            <resolution>1</resolution>
+            <min_angle>0</min_angle>
+            <max_angle>0</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.05</min>
+          <max>8.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin name="gazebo_ros_sonar" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=/sensor/sonar</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>sonar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- 6. INDEPENDENT ROTOR MACRO -->
+  <xacro:macro name="motor" params="name x y">
+    <link name="${name}">
+      <visual>
+        <geometry><cylinder radius="0.05" length="0.01"/></geometry>
+        <material name="red"><color rgba="1.0 0.0 0.0 0.5"/></material>
+      </visual>
+      <inertial>
+        <mass value="0.01"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+      </inertial>
+    </link>
+
+    <joint name="chassis_to_${name}" type="continuous">
+      <parent link="chassis"/>
+      <child link="${name}"/>
+      <origin xyz="${x} ${y} 0.02" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <gazebo>
+      <plugin name="gazebo_ros_force_${name}" filename="libgazebo_ros_force.so">
+        <ros>
+          <remapping>gazebo_ros_force:=/drone/motors/${name}</remapping>
+        </ros>
+        <link_name>${name}</link_name>
+        <force_frame>link</force_frame>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:motor name="front_right" x="0.17" y="-0.194"/>
+  <xacro:motor name="front_left" x="0.17" y="0.194"/>
+  <xacro:motor name="back_right" x="-0.17" y="-0.194"/>
+  <xacro:motor name="back_left" x="-0.17" y="0.194"/>
+
+  <!-- 7. IMU SENSOR LINK -->
+  <joint name="chassis_to_imu" type="fixed">
+    <parent link="chassis"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.001"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0" 
+               iyy="0.000001" iyz="0" 
+               izz="0.000001"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="imu_link">
+    <sensor name="drone_imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>250.0</update_rate>
+      <visualize>false</visualize>
+      <plugin name="gazebo_ros_imu_sensor" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>~/out:=/imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.0002</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <gazebo>
+    <allow_auto_disable>false</allow_auto_disable>
+  </gazebo>
+
+  <!-- 8. CAMERA SENSOR LINK -->
+  <link name="camera_link"/>
+  <joint name="camera_joint" type="fixed">
+      <parent link="chassis"/>
+      <child link="camera_link"/>
+      <!-- Shifted 10cm forward along Green Y-axis, rotated 90 degrees -->
+      <origin xyz="0.0 0.1 0.0" rpy="0 0 1.5708"/>
+  </joint>
+  
+  <gazebo reference="camera_link">
+      <sensor type="camera" name="front_camera">
+          <update_rate>30.0</update_rate>
+          <camera>
+              <horizontal_fov>1.39626</horizontal_fov>
+              <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+          </camera>
+          <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+              <alwaysOn>true</alwaysOn>
+              <cameraName>drone_camera</cameraName>
+              <imageTopicName>image_raw</imageTopicName>
+              <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+              <frameName>camera_link</frameName>
+          </plugin>
+      </sensor>
+  </gazebo>
+
+</robot>

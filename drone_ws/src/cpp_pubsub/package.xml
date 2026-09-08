@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cpp_pubsub</name>
+  <version>0.0.1</version>
+  <description>Swarm robot package built on tutorial workspace</description>
+  <maintainer email="jbwjake81@email.com">Jake Weber</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <depend>gazebo_ros</depend>
+  <depend>ros2_control</depend>
+  <depend>gazebo_ros2_control</depend>
+  <depend>controller_manager</depend>
+  <depend>joint_state_broadcaster</depend>
+  <depend>diff_drive_controller</depend>
+  <depend>ros2_controllers</depend>
+
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>plotjuggler</exec_depend>
+  <exec_depend>python3-serial</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

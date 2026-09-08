@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    
+    <!-- Global Gravity (Moved OUTSIDE the physics tag) -->
+    <!-- Positive 20 gravity will make the drone rocket upwards -->
+    <gravity>0 0 -9.81</gravity>
+
+    <!-- The plugin that broadcasts /gazebo/model_states -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>10.0</update_rate>
+    </plugin>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <!-- A ground plane to catch the drone -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    
+    <!-- Physics engine settings -->
+    <physics name="default_physics" default="true" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    
+  </world>
+</sdf>
